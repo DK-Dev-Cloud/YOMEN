@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>YOMENのメモ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { 
+    font-family: 'Arial','sans-serif'; 
+    background: #ffffff;
+    text-align:center; 
+    margin:0; 
+    padding:0;
+  }
+  h1{
+    margin:15px;
+    font-size:1.8em;
+    text-shadow: 1px 1px 2px #ffffff;
+  }
+  .controls{
+    margin:10px;
+  }
+  .btn{
+    padding:8px 14px;
+    margin:5px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    background:#ffa500;
+    color:white;
+    font-weight:bold;
+    box-shadow: 1px 1px 3px #ccc;
+  }
+  .board{display:flex;flex-wrap:wrap;justify-content:center;gap:15px;margin-top:10px;}
+  .column{display:flex;flex-direction:column;align-items:center;}
+  .stack{display:flex;flex-direction:column;gap:5px;}
+  .cell{
+    width:60px;height:60px;
+    border:2px solid #d2b48c;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    cursor:pointer;
+    user-select:none;
+    background:#fff0e6;
+    color:black;
+    font-size:1.5em;
+    transition: all 0.2s;
+  }
+  .cell:hover{
+    transform: scale(1.05);
+    box-shadow: 1px 1px 6px #d2b48c;
+  }
+  .label{
+    font-weight:bold;
+    font-size:1em;
+    margin-bottom:3px;
+    color:#8b4513;
+  }
+  .top-grid{
+    display:grid;
+    grid-template-columns:repeat(5,70px);
+    grid-template-rows:repeat(5,70px);
+    justify-content:center;
+    gap:5px;
+    margin-top:30px;
+  }
+  .top-label{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    background:#ffffff;
+    font-size:1.5em;
+    color:#8b4513;
+  }
+  .x-mark{
+    font-size:2em;
+    font-weight:bold;
+  }
+  .dropdowns{
+    margin:15px auto;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+  }
+  .dropdowns div{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .memo{
+    margin:20px auto;
+    width:90%;
+    max-width:500px;
+  }
+  textarea{
+    width:100%;
+    height:90px;
+    padding:10px;
+    border-radius:8px;
+    border:2px solid #d2b48c;
+    font-size:1.5em;
+    resize:none;
+    background:#fff8e6;
+  }
+</style>
+</head>
+<body>
+<h1>
+  <span style="color:#ff4d4d;">Y</span>
+  <span style="color:#33cc33;">O</span>
+  <span style="color:#4da6ff;">M</span>
+  <span style="color:#ffd633;">E</span>
+  <span style="color:#333333;">N</span>
+  のメモ
+</h1>
+
+<div class="controls">
+  <button class="btn" onclick="switchSet()">色セット切替</button>
+  <span id="setName">相手: ペア1 (赤・黄・黒)</span>
+</div>
+
+<!-- 横から視点 -->
+<div id="horizontal" class="board">
+  <script>
+    const cols = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+    for(let c of cols){
+      document.write('<div class="column"><div class="label">'+c+'</div><div class="stack">');
+      document.write('<div class="cell" data-pos="'+c+'1" data-label="上" onclick="changeColor(this,\'horizontal\')">上</div>');
+      document.write('<div class="cell" data-pos="'+c+'2" data-label="中" onclick="changeColor(this,\'horizontal\')">中</div>');
+      document.write('<div class="cell" data-pos="'+c+'3" data-label="下" onclick="changeColor(this,\'horizontal\')">下</div>');
+      document.write('</div></div>');
+    }
+  </script>
+</div>
+
+<!-- 上から視点 3x3 -->
+<div class="top-grid" id="topGrid">
+  <div class="top-label"></div><div class="top-label">A</div><div class="top-label">B</div><div class="top-label">C</div><div class="top-label"></div>
+  <div class="top-label">D</div><div class="cell" data-pos="1" data-label="1" onclick="changeColor(this,'top')">1</div><div class="cell" data-pos="2" data-label="2" onclick="changeColor(this,'top')">2</div><div class="cell" data-pos="3" data-label="3" onclick="changeColor(this,'top')">3</div><div class="top-label">E</div>
+  <div class="top-label">F</div><div class="cell" data-pos="4" data-label="4" onclick="changeColor(this,'top')">4</div><div class="cell" data-pos="5" data-label="5" onclick="changeColor(this,'top')">5</div><div class="cell" data-pos="6" data-label="6" onclick="changeColor(this,'top')">6</div><div class="top-label">G</div>
+  <div class="top-label">H</div><div class="cell" data-pos="7" data-label="7" onclick="changeColor(this,'top')">7</div><div class="cell" data-pos="8" data-label="8" onclick="changeColor(this,'top')">8</div><div class="cell" data-pos="9" data-label="9" onclick="changeColor(this,'top')">9</div><div class="top-label">I</div>
+  <div class="top-label"></div><div class="top-label">J</div><div class="top-label">K</div><div class="top-label">L</div><div class="top-label"></div>
+</div>
+
+<!-- ドロップダウン -->
+<div class="dropdowns" id="dropdowns"></div>
+
+<!-- メモ -->
+<div class="memo">
+  <textarea placeholder="ここにメモを入力できます..."></textarea>
+</div>
+
+<script>
+const colorSets = {
+  1:["#ff4d4d","#ffd633","#333333"],
+  2:["#4da6ff","#33cc33","#ffffff"]
+};
+let currentSet = 1;
+let state = { horizontal:{}, top:{} };
+
+// セル色変更（✕後は初期に戻るループ）
+function changeColor(cell, board){
+  const colors = colorSets[currentSet];
+  const pos = cell.dataset.pos;
+  const label = cell.dataset.label; // 本来の文字（上・中・下 or 数字）
+  let idx = state[board][pos]===undefined ? -1 : state[board][pos];
+
+  if(idx === -1){ 
+    cell.textContent = label;
+    cell.classList.remove("x-mark");
+    cell.style.backgroundColor = colors[0];
+    cell.style.color = (colors[0]==="#333333"||colors[0]==="#33cc33"||colors[0]==="#4da6ff") ? "white" : "black";
+    state[board][pos] = 0;
+  }
+  else if(idx < colors.length-1){
+    idx++;
+    cell.style.backgroundColor = colors[idx];
+    cell.style.color = (colors[idx]==="#333333"||colors[idx]==="#33cc33"||colors[idx]==="#4da6ff") ? "white" : "black";
+    cell.textContent = label;
+    state[board][pos] = idx;
+  }
+  else if(idx === colors.length-1){
+    cell.textContent = "✕";
+    cell.classList.add("x-mark");
+    cell.style.backgroundColor = "#fff0e6";
+    cell.style.color = "black";
+    state[board][pos] = "x"; 
+  }
+  else if(idx === "x"){
+    cell.textContent = label;
+    cell.classList.remove("x-mark");
+    cell.style.backgroundColor = "#fff0e6";
+    cell.style.color = "black";
+    state[board][pos] = -1;
+  }
+
+  if(board==="top") syncDropdown(pos, cell.textContent);
+}
+
+// ドロップダウン同期
+function syncDropdown(pos, value){
+  const dropdown = document.getElementById(`select${pos}`);
+  dropdown.value = (value==="✕") ? "✕" : "";
+}
+
+// ドロップダウン生成
+const dropdownsContainer = document.getElementById('dropdowns');
+for(let i=1;i<=9;i++){
+  const wrapper = document.createElement('div');
+  wrapper.style.display='flex';
+  wrapper.style.flexDirection='column';
+  wrapper.style.alignItems='center';
+
+  const label = document.createElement('span');
+  label.textContent=i;
+  label.style.fontWeight='bold';
+  label.style.fontSize='1.2em';
+  label.style.marginBottom='6px';
+
+  const select = document.createElement('select');
+  select.id='select'+i;
+  ['','上','中','下','✕'].forEach(val=>{
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = val||'---';
+    select.appendChild(opt);
+  });
+
+  wrapper.appendChild(label);
+  wrapper.appendChild(select);
+  dropdownsContainer.appendChild(wrapper);
+
+  // ドロップダウン変更時
+  select.addEventListener('change', function(){
+    const cell = document.querySelector(`.cell[data-pos='${i}']`);
+    if(this.value==="✕"){
+      cell.textContent="✕";
+      cell.classList.add("x-mark");
+      cell.style.backgroundColor="#fff0e6";
+      cell.style.color="black";
+      state.top[i]="x";
+    }
+  });
+}
+
+// 色セット切替
+function switchSet(){
+  currentSet = currentSet===1?2:1;
+  document.getElementById("setName").textContent = currentSet===1 ? "相手: ペア1 (赤・黄・黒)" : "相手: ペア2 (青・緑・白)";
+  const allCells = document.querySelectorAll('.cell');
+  allCells.forEach(c=>{
+    const label = c.dataset.label;
+    c.style.backgroundColor="#fff0e6";
+    c.style.color="black";
+    c.textContent = label;
+    c.classList.remove("x-mark");
+  });
+  state={horizontal:{},top:{}};
+  document.querySelectorAll('.dropdowns select').forEach(d=>d.value="");
+}
+</script>
+</body>
+</html>
